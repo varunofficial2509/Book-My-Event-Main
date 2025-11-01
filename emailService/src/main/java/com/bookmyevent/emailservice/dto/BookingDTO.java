@@ -1,9 +1,6 @@
 package com.bookmyevent.emailservice.dto;
 
-import com.bookmyevent.bookmyeventservice.dto.TicketDTO;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -45,7 +42,7 @@ public class BookingDTO implements Serializable {
         this.tickets = tickets;
     }
 
-    public List<TicketDTO> getTickets() {
+    public List<com.bookmyevent.emailservice.dto.TicketDTO> getTickets() {
         return tickets;
     }
 

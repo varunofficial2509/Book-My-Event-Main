@@ -1,7 +1,7 @@
 package com.bookmyevent.emailservice.service;
 
-import com.bookmyevent.bookmyeventservice.dto.TicketDTO;
 import com.bookmyevent.emailservice.dto.BookingDTO;
+import com.bookmyevent.emailservice.dto.TicketDTO;
 import com.bookmyevent.emailservice.util.EmailServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
