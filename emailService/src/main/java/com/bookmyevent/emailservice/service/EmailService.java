@@ -1,5 +1,6 @@
 package com.bookmyevent.emailservice.service;
 
+import com.bookmyevent.bookmyeventservice.dto.TicketDTO;
 import com.bookmyevent.emailservice.dto.BookingDTO;
 import com.bookmyevent.emailservice.util.EmailServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class EmailService {
@@ -31,20 +35,65 @@ public class EmailService {
 
     @KafkaListener(topics = "${email.topic}", groupId = "${email.groupId}")
     public void consumeBooking(BookingDTO bookingDTO) {
-        String subject = EmailServiceConstants.emailSubject;
-        String userName = bookingDTO.getUserName();
-        String seatList = String.join(", ", bookingDTO.getSeatNumbers());
-        String movieTitle = bookingDTO.getMovieName();
-        String theaterName = bookingDTO.getTheaterName();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM, dd, yyyy");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US);
-        String formattedDate = bookingDTO.getShowTime().format(dateFormatter);
-        String showTime = bookingDTO.getShowTime().format(timeFormatter);
+        try {
+            String subject = EmailServiceConstants.emailSubject;
+            String userName = bookingDTO.getUserName();
+            String eventName = bookingDTO.getEventName();
+            String venueName = bookingDTO.getVenueName();
+            String cityName = bookingDTO.getCityName() != null ? bookingDTO.getCityName() : "";
 
-        String body = String.format(EmailServiceConstants.emailFormat,
-                userName, movieTitle, theaterName, formattedDate, showTime, seatList
-        );
-        sendEmail(bookingDTO.getUserEmail(), subject, body);
+            // ✅ FIX: Handle both indoor and outdoor events
+            String ticketInfo;
+            if (bookingDTO.getSeatNumbers() != null && !bookingDTO.getSeatNumbers().isEmpty()) {
+                // INDOOR EVENT - Show seat numbers
+                ticketInfo = "Seats: " + String.join(", ", bookingDTO.getSeatNumbers());
+            } else {
+                // OUTDOOR EVENT - Show ticket breakdown
+                ticketInfo = buildTicketSummary(bookingDTO.getTickets());
+            }
+
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.US);
+            String formattedDate = bookingDTO.getShowTime() != null
+                    ? bookingDTO.getShowTime().format(dateFormatter)
+                    : bookingDTO.getBookingTime().format(dateFormatter);
+            String showTime = bookingDTO.getShowTime() != null
+                    ? bookingDTO.getShowTime().format(timeFormatter)
+                    : "TBD";
+
+            String body = String.format(EmailServiceConstants.emailFormat,
+                    userName, eventName, venueName, cityName, formattedDate, showTime,
+                    ticketInfo, bookingDTO.getBookingReferenceId()
+            );
+
+            sendEmail(bookingDTO.getUserEmail(), subject, body);
+            System.out.println("✅ Email sent successfully to: " + bookingDTO.getUserEmail());
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ✅ NEW METHOD: Build ticket summary for outdoor events
+    private String buildTicketSummary(List<TicketDTO> tickets) {
+        if (tickets == null || tickets.isEmpty()) {
+            return "General Admission";
+        }
+
+        // Group tickets by category and count
+        Map<String, Long> ticketCounts = tickets.stream()
+                .collect(Collectors.groupingBy(
+                        ticket -> ticket.getTicketCategoryName() != null
+                                ? ticket.getTicketCategoryName()
+                                : "General",
+                        Collectors.counting()
+                ));
+
+        // Format: "2x VIP Pass, 3x General Entry"
+        return ticketCounts.entrySet().stream()
+                .map(entry -> entry.getValue() + "x " + entry.getKey())
+                .collect(Collectors.joining(", "));
     }
 
 }

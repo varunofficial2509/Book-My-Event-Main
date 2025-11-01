@@ -17,7 +17,10 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("USER"));
+        // Use the role from User entity
+        return Collections.singleton(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
     }
 
     @Override
@@ -27,7 +30,8 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getFirstName();
+        // Return email instead of firstName for login
+        return user.getEmail();
     }
 
     @Override
@@ -47,6 +51,6 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.getIsActive();
     }
 }

@@ -20,14 +20,11 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        //logic to check if user exists with username
-        User user = userRepository.findByFirstName(username);
-        if(null == user){
-            throw new UsernameNotFoundException("User not found");
-        }
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // Use email instead of firstName for authentication
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        //return back the details of user but in spring required format i.e., UserDetails
         return new UserPrinciple(user);
     }
 }
