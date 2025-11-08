@@ -42,7 +42,6 @@ public class EmailService {
             String venueName = bookingDTO.getVenueName();
             String cityName = bookingDTO.getCityName() != null ? bookingDTO.getCityName() : "";
 
-            // ✅ FIX: Handle both indoor and outdoor events
             String ticketInfo;
             if (bookingDTO.getSeatNumbers() != null && !bookingDTO.getSeatNumbers().isEmpty()) {
                 // INDOOR EVENT - Show seat numbers
@@ -75,7 +74,6 @@ public class EmailService {
         }
     }
 
-    // ✅ NEW METHOD: Build ticket summary for outdoor events
     private String buildTicketSummary(List<TicketDTO> tickets) {
         if (tickets == null || tickets.isEmpty()) {
             return "General Admission";

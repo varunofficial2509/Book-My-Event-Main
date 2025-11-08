@@ -37,4 +37,11 @@ public class BookingServiceWithCircuitBreaker {
         throw new BookingFailedException("Failed to book the seats , Please try again!");
     }
 
+    @Recover
+    public BookingDTO bookOutdoorFallBackMethod(ObjectOptimisticLockingFailureException ex,
+                                                Long userId, Long eventId,
+                                                Map<Long, Integer> ticketCategoryQuantities) {
+        throw new BookingFailedException("Failed to book outdoor event, Please try again!");
+    }
+
 }
